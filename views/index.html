@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>签到结果</title>
+	<link href="./index.css" rel="stylesheet">
+</head>
+<body>
+<div id="app"></div>
+
+<script type="importmap">
+	{
+	  "imports": {
+		"vue": "/mihoyo-sign/assets/js/vue.esm-browser.prod.js"
+	  }
+	}
+</script>
+<script type="module">
+	import {createApp} from "vue";
+	import App from "./components/index.js";
+	
+	createApp(App).mount("#app");
+</script>
+</body>
+</html>
+
+<style>
+	@font-face {
+		font-family: "PingFang SC";
+		src: url("../assets/fonts/PingFang SC.woff2") format("woff2")
+	}
+	
+	body, html {
+		font-family: PingFang SC, Microsoft Yahei, Noto Sans SC, HarmonyOS_Regular, WenQuanYi Micro Hei, Helvetica Neue, Helvetica, Arial, Hiragino Sans GB, Heiti SC, sans-serif;
+		background-color: #fff;
+	}
+</style>

@@ -1,0 +1,32 @@
+@import "../assets/styles/reset.css";
+@import "../components/game/index.css";
+@import "../components/common/styles/CommonBase.css";
+@import "../components/common/styles/CommonCard.css";
+
+.common.common-base main {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	row-gap: 70px;
+	padding: 50px 20px;
+}
+
+.common .right-header {
+	font-size: 14px;
+	font-weight: 700;
+	text-align: right;
+}
+
+.common .common-card {
+	width: 95%;
+}
+
+.common .common-card .common-card-container {
+	display: grid;
+	gap: 20px;
+}
+
+.common .common-card-container {
+	display: flex;
+	align-items: center;
+}
