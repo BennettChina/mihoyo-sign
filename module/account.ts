@@ -1,4 +1,3 @@
-import { InputParameter } from "@/modules/command";
 import { DeviceData, MiHoYoAccount } from "#/mihoyo-sign/types/mihoyo";
 import { transformCookie } from "#/mihoyo-sign/utils/format";
 import { bbs_version } from "#/mihoyo-sign/utils/ds";
@@ -7,19 +6,20 @@ import { deviceFp, getMiHoYoRandomStr, getMiHoYoUuid, getPlugins, randomEvenNum 
 import { Md5 } from "md5-typescript";
 import UserAgent from "user-agents";
 import plat from "platform";
+import Bot from "ROOT";
 
 export class Account {
-	public async getAccounts( { redis, messageData }: InputParameter ): Promise<MiHoYoAccount[]> {
-		const userId = messageData.user_id;
+	
+	public async getAccounts( userId: number ): Promise<MiHoYoAccount[]> {
 		const deviceDBKey = `adachi.miHoYo.${ Md5.init( userId ) }`;
 		let dbKey = `adachi.miHoYo.data.`;
-		const device = ( await redis.getHash( deviceDBKey ) as DeviceData );
+		const device = ( await Bot.redis.getHash( deviceDBKey ) as DeviceData );
 		if ( device.deviceId ) {
 			await getDeviceFp( device.deviceId, device.seedId, device.seedTime, JSON.stringify( this.getExtFields() ), device.deviceFp, "5", "hk4e_cn" );
-			const keys = await redis.getKeysByPrefix( dbKey );
+			const keys = await Bot.redis.getKeysByPrefix( dbKey );
 			const accounts: MiHoYoAccount[] = [];
 			for ( let key of keys ) {
-				const data = await redis.getHash( key );
+				const data = await Bot.redis.getHash( key );
 				if ( parseInt( data.userId ) === userId ) {
 					const ck = transformCookie( data.cookie );
 					const cookie = transformCookie( {
@@ -42,7 +42,7 @@ export class Account {
 		}
 		
 		dbKey = "silvery-star.private-";
-		const keys = await redis.getKeysByPrefix( dbKey );
+		const keys = await Bot.redis.getKeysByPrefix( dbKey );
 		const accounts: MiHoYoAccount[] = [];
 		const deviceData = await this.createDevice();
 		const headers = {
@@ -52,7 +52,7 @@ export class Account {
 			'x-rpc-app_version': bbs_version,
 		}
 		for ( let key of keys ) {
-			const data = await redis.getString( key );
+			const data = await Bot.redis.getString( key );
 			const account = JSON.parse( data ).setting;
 			if ( account.userID === userId ) {
 				const { list }: { list: any[] } = await getUserAccountInfo( account.mysID, account.cookie, headers );
@@ -92,7 +92,7 @@ export class Account {
 	}
 	
 	
-	public async createDevice(): Promise<DeviceData> {
+	private async createDevice(): Promise<DeviceData> {
 		const deviceId = getMiHoYoUuid();
 		let device_fp = deviceFp();
 		const lifecycleId = getMiHoYoUuid();

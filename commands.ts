@@ -1,4 +1,4 @@
-import { ConfigType, OrderConfig } from "@/modules/command";
+import { ConfigType, OrderConfig, SwitchConfig } from "@/modules/command";
 import { MessageScope } from "@/modules/message";
 import { AuthLevel } from "@/modules/management/auth";
 
@@ -26,4 +26,18 @@ const get_account: OrderConfig = {
 	detail: "查看我绑定的米游社账户，根据此指令返回的序号进行单个账号签到。"
 }
 
-export default <ConfigType[]>[ sign, get_account ];
+const auto_sign: SwitchConfig = {
+	type: "switch",
+	mode: "divided",
+	header: "",
+	cmdKey: "miHoYo-sign.auto-sign",
+	desc: [ "自动签到", "" ],
+	regexps: [ "" ],
+	onKey: "开启自动签到",
+	offKey: "关闭自动签到",
+	auth: AuthLevel.User,
+	main: "achieves/auto-sign",
+	detail: "设置了自动打码才能用自动签到，否则该功能不可用"
+}
+
+export default <ConfigType[]>[ sign, get_account, auto_sign ];

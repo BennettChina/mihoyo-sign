@@ -2,9 +2,11 @@ import { definePlugin } from "@/modules/plugin";
 import cfgList from "./commands";
 import routers from "./routes";
 import { Renderer } from "@/modules/renderer";
+import { Task } from "#/mihoyo-sign/module/task";
 
 export let config: typeof initConfig;
 export let renderer: Renderer;
+let task: Task;
 
 const initConfig = {
 	captcha: {
@@ -29,6 +31,7 @@ const initConfig = {
 			}
 		}
 	},
+	cron: "0 30 8 * * *",
 	alias: [ "米游社签到" ]
 }
 
@@ -48,10 +51,23 @@ export default definePlugin( {
 		const _config = params.configRegister( "main", initConfig );
 		_config.on( "refresh", ( newCfg ) => {
 			params.setAlias( newCfg.alias );
+			if ( task ) {
+				task.cancel( newCfg.captcha.auto.enabled );
+			} else if ( newCfg.captcha.auto.enabled ) {
+				task = new Task();
+			}
 		} );
 		params.setAlias( _config.alias );
 		config = _config;
 		/* 实例化渲染器 */
 		renderer = params.renderRegister( "#app", "views" );
+		
+		// 启用自动签到
+		if ( config.captcha.auto.enabled ) {
+			task = new Task();
+		}
+	},
+	async unmounted( _params ) {
+		task.cancel();
 	}
 } )

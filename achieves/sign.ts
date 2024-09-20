@@ -8,7 +8,7 @@ import { renderer } from "#/mihoyo-sign/init";
 export default defineDirective( "order", async ( i: InputParameter ) => {
 	const { messageData: { user_id }, sendMessage, redis } = i;
 	const rawMessage = i.messageData.raw_message;
-	const accounts = await new Account().getAccounts( i );
+	const accounts = await new Account().getAccounts( user_id );
 	if ( accounts.length === 0 ) {
 		await sendMessage( "未找到您绑定的米游社账号，请使用登录米游社功能或者添加私人服务功能" );
 		return;
