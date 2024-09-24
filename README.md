@@ -98,3 +98,7 @@ alias:
 
 - [gt-manual](https://github.com/BennettChina/gt-manual)
 - [awesome-api](https://github.com/BennettChina/awesome-api)
+
+## 致谢
+
+- 感谢 [MarryDream](https://github.com/MarryDream) 提供的设计方案。
