@@ -223,7 +223,13 @@ async function getValidateByAuto( gt: string, challenge: string ): Promise<Geete
 	} );
 	
 	if ( data[response.codeFieldName] != response.successCode ) {
-		return Promise.reject( `[获取人机验证结果] [auto] ${ data[response.messageFieldName] }` );
+		let error = data[response.messageFieldName];
+		if ( !error ) {
+			error = JSON.stringify( data );
+		} else if ( typeof error !== 'string' ) {
+			error = JSON.stringify( error );
+		}
+		return Promise.reject( `[获取人机验证结果] [auto] ${ error }` );
 	}
 	
 	const result = data[response.dataFieldName];
