@@ -25,13 +25,14 @@ export class Task {
 				const dbKey = `adachi.miHoYo.auto-sign-in`;
 				const autoList = await Bot.redis.getList( dbKey );
 				for ( let userId of autoList ) {
-					const accounts = await new Account().getAccounts( parseInt( userId ) );
+					const qq = parseInt( userId );
+					const accounts = await new Account().getAccounts( qq );
 					for ( const account of accounts ) {
 						await new MiHoYoSign().execute( account );
 						// 每个账号签到后加入随机延时
 						await sleep( getRandomNumber( 3000, 5000 ) );
 					}
-					this.sendRender( userId ).catch( reason => Bot.logger.error( reason ) );
+					this.sendRender( qq ).catch( reason => Bot.logger.error( reason ) );
 				}
 			} )
 		} )
@@ -41,7 +42,7 @@ export class Task {
 		return this.job.cancel( restart );
 	}
 	
-	private async sendRender( userId: number | string ): Promise<void> {
+	private async sendRender( userId: number ): Promise<void> {
 		const resp = await renderer.asSegment( "/index.html", { qq: userId }, {
 			width: 1080,
 			height: 1920,
