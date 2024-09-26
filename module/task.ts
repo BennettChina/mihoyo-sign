@@ -6,6 +6,8 @@ import { MiHoYoSign } from "#/mihoyo-sign/module/index";
 import { sleep } from "@/utils/async";
 import { getRandomNumber } from "@/utils/random";
 import { MessageType } from "@/modules/message";
+import { MiHoYoAccount } from "#/mihoyo-sign/types/mihoyo";
+import { SignInResult } from "#/mihoyo-sign/types/signin";
 
 export class Task {
 	private readonly task_name: string;
@@ -32,6 +34,7 @@ export class Task {
 						// 每个账号签到后加入随机延时
 						await sleep( getRandomNumber( 3000, 5000 ) );
 					}
+					await this.saveResult( qq, ...accounts );
 					this.sendRender( qq ).catch( reason => Bot.logger.error( reason ) );
 				}
 			} )
@@ -55,5 +58,30 @@ export class Task {
 		}
 		Bot.logger.error( resp.error );
 		await sendMessage( "签到完成，图片渲染失败" );
+	}
+	
+	private async saveResult( userId: number, ...accounts: MiHoYoAccount[] ): Promise<void> {
+		const signResult: SignInResult[] = []
+		for ( const account of accounts ) {
+			const gameSignResult: any[] = [];
+			for ( let game of account.games ) {
+				const result = await Bot.redis.getHash( `adachi.miHoYo.signIn.${ game.uid }.${ game.gameId }` );
+				if ( Object.keys( result ).length !== 0 ) {
+					const data = {
+						result,
+						game
+					}
+					gameSignResult.push( data );
+				}
+			}
+			const communitySignResult = await Bot.redis.getHash( `adachi.miHoYo.signIn.${ account.uid }.bbs` );
+			signResult.push( {
+				games: gameSignResult,
+				community: communitySignResult,
+				uid: account.uid
+			} )
+		}
+		
+		await Bot.redis.setString( `adachi.miHoYo.signIn.${ userId }`, JSON.stringify( signResult ), 60 );
 	}
 }
