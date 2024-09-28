@@ -12,16 +12,25 @@ const template = `
     </tr>
   </thead>
   <tbody>
-    <tr v-for="({game, result, reason}, idx) in games" :key="idx">
+    <tr v-for="({game, result}, idx) in games" :key="idx">
       <th scope="row">{{game.uid}}</th>
       <th scope="row">{{game.gameName}}</th>
       <th scope="row">{{signResult(result.is_sign)}}</th>
-      <th scope="row" class="reward">
-      	<img :src="result.icon" alt="icon" class="icon"/>
-      	<div>{{result.name}}*{{result.cnt}}</div></th>
+      <th scope="row">
+      	<div v-if="result.is_sign" class="reward-main">
+	        <div class="reward">
+		        <img :src="result.icon" alt="icon" class="icon"/>
+		        <div>{{result.name}}*{{result.cnt}}</div>
+			</div>
+	        <div v-if="result.has_extra_award" class="reward">
+	            <img :src="result.extra_reward.icon" alt="extra-icon" class="icon"/>
+	            <div>{{result.extra_reward.name}}*{{result.extra_reward.cnt}}(活动)</div>
+			</div>
+		</div>
+	  </th>
       <th scope="row">{{result.total_sign_day}}</th>
       <th scope="row">{{result.sign_cnt_missed}}</th>
-      <th scope="row">{{reason}}</th>
+      <th scope="row">{{result.reason}}</th>
     </tr>
   </tbody>
 </table>

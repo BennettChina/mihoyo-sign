@@ -33,7 +33,11 @@ tfoot td {
 	font-weight: bold;
 }
 
-.reward {
+.reward-main {
+	flex-direction: column;
+}
+
+.reward, .reward-main {
 	display: flex;
 	align-content: center;
 	justify-content: center;

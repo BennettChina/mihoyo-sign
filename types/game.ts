@@ -2,13 +2,22 @@
  * @desc 米游社游戏签到信息
  * @interface GameSignInfo
  * @property {boolean} is_sign 今天是否签到
+ * @property {string} today 今日日期
  * @property {number} total_sign_day 本月累计签到天数
  * @property {number} sign_cnt_missed 漏签次数
+ * @property {string} region 服务区域（当前为空）
+ * @property {number} short_sign_day 活动签到
+ * @property {boolean} send_first 是否初次签到
  */
 type GameSignInfo = {
 	is_sign: boolean;
+	today: string;
+	is_sub: boolean;
 	total_sign_day: number;
 	sign_cnt_missed: number;
+	region: string;
+	short_sign_day: number;
+	send_first: boolean;
 }
 
 /**
@@ -79,4 +88,7 @@ type GameSignInReward = {
 	short_extra_award: ExtraAward;
 }
 
-type GameSignInResult = GameSignInfo & Partial<Award>;
+type GameSignInResult = GameSignInfo & Partial<Award> & {
+	has_extra_award?: boolean;
+	extra_reward?: Award;
+};

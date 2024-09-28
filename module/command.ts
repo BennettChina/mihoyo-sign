@@ -152,19 +152,26 @@ export abstract class GameSignInCommand extends SignInCommand implements Command
 	
 	private async getSignInInfo( uid: string, region: string, cookie: string ): Promise<GameSignInResult> {
 		const sign = await getGameSignInInfo( this.URL_INFO, this.act_id, uid, region, cookie, this.headers );
-		const { is_sign, total_sign_day, sign_cnt_missed } = sign;
+		const { is_sign, total_sign_day, sign_cnt_missed, short_sign_day } = sign;
 		if ( !is_sign ) return sign;
 		
 		const {
 			awards,
-			month
+			month,
+			short_extra_award
 		} = await getGameSignInReward( this.URL_HOME, this.act_id, uid, region, cookie, this.headers );
 		const reward = awards[total_sign_day - 1];
+		if ( short_extra_award.has_extra_award && short_sign_day <= short_extra_award.list.length ) {
+			const extra_reward = short_extra_award.list[short_sign_day - 1];
+			this.info( `[${ uid }] 本日已签到，${ month }月已连续签到${ total_sign_day }天，漏签${ sign_cnt_missed }次，今日奖励为: ${ reward.name } x ${ reward.cnt } 和活动签到奖励 ${ extra_reward.name } x ${ extra_reward.cnt }` );
+			return { ...sign, ...reward, has_extra_award: true, extra_reward };
+		}
 		this.info( `[${ uid }] 本日已签到，${ month }月已连续签到${ total_sign_day }天，漏签${ sign_cnt_missed }次，今日奖励为: ${ reward.name } x ${ reward.cnt }` );
 		return { ...sign, ...reward };
 	}
 	
-	private async gameSignIn( userId: number, uid: string, region: string, cookie: string, challenge?: string, validate?: string, seccode?: string, retry = 0 ): Promise<GameSignInResult> {
+	private async gameSignIn( userId: number, uid: string, region: string, cookie: string
+		, challenge?: string, validate?: string, seccode?: string, retry = 0 ): Promise<GameSignInResult> {
 		const headers = this.headers;
 		if ( challenge && validate ) {
 			headers["x-rpc-challenge"] = challenge;

@@ -47,6 +47,22 @@ export default definePlugin( {
 		repoName: "mihoyo-sign",
 		ref: "master"
 	},
+	subscribe: [ {
+		name: "自动签到",
+		async getUser( { redis } ) {
+			const dbKey = `adachi.miHoYo.auto-sign-in`;
+			const autoList = await redis.getList( dbKey );
+			return {
+				person: autoList.map( item => parseInt( item ) )
+			};
+		},
+		async reSub( userId, type, { redis } ) {
+			if ( type === 'private' ) {
+				const dbKey = `adachi.miHoYo.auto-sign-in`;
+				await redis.delListElement( dbKey, `${ userId }` );
+			}
+		}
+	} ],
 	async mounted( params ) {
 		const _config = params.configRegister( "main", initConfig );
 		_config.on( "refresh", ( newCfg ) => {

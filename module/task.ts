@@ -67,6 +67,9 @@ export class Task {
 			for ( let game of account.games ) {
 				const result = await Bot.redis.getHash( `adachi.miHoYo.signIn.${ game.uid }.${ game.gameId }` );
 				if ( Object.keys( result ).length !== 0 ) {
+					if ( result.extra_reward ) {
+						result.extra_reward = JSON.parse( result.extra_reward );
+					}
 					const data = {
 						result,
 						game
