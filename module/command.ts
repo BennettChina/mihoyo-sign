@@ -20,6 +20,7 @@ import { transformCookie, transformObj } from "#/mihoyo-sign/utils/format";
 import { RiskError } from "#/mihoyo-sign/module/exception/risk-error";
 import { GeetestValidate } from "#/mihoyo-sign/types/geetest";
 import { NotFoundError } from "#/mihoyo-sign/module/exception/not-found";
+import { AutoFailedException } from "#/mihoyo-sign/module/exception/auto-failed";
 
 
 export interface Command {
@@ -74,6 +75,10 @@ abstract class SignInCommand implements Command {
 				}
 			} catch ( error ) {
 				if ( error instanceof NotFoundError ) {
+					throw error;
+				}
+				if ( error instanceof AutoFailedException ) {
+					Bot.logger.error( error.message );
 					throw error;
 				}
 				if ( !printed ) {
@@ -186,12 +191,20 @@ export abstract class GameSignInCommand extends SignInCommand implements Command
 		if ( retry >= 3 ) {
 			throw new RiskError( `[${ this.name }] 签到失败，人机验证未通过` );
 		}
-		const {
-			geetest_challenge,
-			geetest_validate,
-			geetest_seccode
-		} = await this.getValidate( userId, sign.gt, sign.challenge );
-		return this.gameSignIn( userId, uid, region, cookie, geetest_challenge, geetest_validate, geetest_seccode, ++retry );
+		try {
+			const {
+				geetest_challenge,
+				geetest_validate,
+				geetest_seccode
+			} = await this.getValidate( userId, sign.gt, sign.challenge );
+			return this.gameSignIn( userId, uid, region, cookie, geetest_challenge, geetest_validate, geetest_seccode, ++retry );
+		} catch ( error ) {
+			// 自动打码失败也加入重试
+			if ( error instanceof AutoFailedException ) {
+				return this.gameSignIn( userId, uid, region, cookie, undefined, undefined, undefined, ++retry );
+			}
+			throw error;
+		}
 	}
 }
 

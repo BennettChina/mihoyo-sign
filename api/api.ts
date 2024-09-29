@@ -6,6 +6,7 @@ import { RiskError } from "#/mihoyo-sign/module/exception/risk-error";
 import { GeetestConfig, GeetestValidate } from "#/mihoyo-sign/types/geetest";
 import { NotFoundError } from "#/mihoyo-sign/module/exception/not-found";
 import { getRootVersion, getThisVersion } from "#/mihoyo-sign/utils/version";
+import { AutoFailedException } from "#/mihoyo-sign/module/exception/auto-failed";
 
 const apis = {
 	FETCH_ROLE_ID: "https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/getGameRecordCard",
@@ -229,12 +230,12 @@ async function getValidateByAuto( gt: string, challenge: string ): Promise<Geete
 		} else if ( typeof error !== 'string' ) {
 			error = JSON.stringify( error );
 		}
-		return Promise.reject( `[获取人机验证结果] [auto] ${ error }` );
+		throw new AutoFailedException( `[获取人机验证结果] [auto] ${ error }` );
 	}
 	
 	const result = data[response.dataFieldName];
 	if ( !result ) {
-		return Promise.reject( `[获取人机验证结果] [auto] 未获取到数据: ${ data[response.messageFieldName] }` );
+		throw new AutoFailedException( `[获取人机验证结果] [auto] 未获取到数据: ${ data[response.messageFieldName] }` );
 	}
 	const validate = result[response.validateFieldName];
 	return {
