@@ -33,6 +33,10 @@ const apis = {
 	FETCH_MISSION: "https://bbs-api.miyoushe.com/apihub/sapi/getUserMissionsState",
 	/* 获取任务列表 */
 	FETCH_MISSION_LIST: "https://bbs-api.miyoushe.com/apihub/wapi/getMissions?point_sn=myb",
+	
+	// 米游社验证码
+	FETCH_MISSION_CREATE_VERIFICATION: "https://bbs-api.miyoushe.com/misc/api/createVerification",
+	FETCH_MISSION_VERIFY_VERIFICATION: "https://bbs-api.miyoushe.com/misc/api/verifyVerification",
 };
 
 
@@ -318,12 +322,12 @@ export async function createCaptcha( cookie: string, headers: Record<string, str
 	const params = {
 		is_high: "true"
 	}
-	const response = await axios.get( apis.FETCH_CREATE_VERIFICATION, {
+	const response = await axios.get( apis.FETCH_MISSION_CREATE_VERIFICATION, {
 		params,
 		headers: {
 			...headers,
 			Cookie: cookie,
-			DS: ds2( "game", undefined, params )
+			DS: ds2( "bbs", undefined, params )
 		}
 	} );
 	
@@ -339,11 +343,11 @@ export async function verifyCaptcha( data: GeetestValidate, cookie: string, head
 	const { stoken, stuid, mid, login_ticket } = transformCookie( cookie );
 	cookie = transformCookie( { stuid, stoken, mid, login_ticket } );
 	data.geetest_seccode = data.geetest_seccode || `${ data.geetest_validate }|jordan`;
-	const response = await axios.post( apis.FETCH_VERIFY_VERIFICATION, data, {
+	const response = await axios.post( apis.FETCH_MISSION_VERIFY_VERIFICATION, data, {
 		headers: {
 			...headers,
 			Cookie: cookie,
-			DS: ds2( "game", data )
+			DS: ds2( "bbs", data )
 		}
 	} );
 	
