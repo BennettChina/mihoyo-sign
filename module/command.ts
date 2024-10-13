@@ -256,7 +256,7 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 					const validate = await this.getValidate( account.userId, gt, challenge );
 					await verifyCaptcha( validate, account.cookie, this.headers );
 					this.validate = true;
-					await this.signIn( account );
+					return await this.signIn( account );
 				} catch ( err ) {
 					this.error( err );
 					await this.saveDB( db_key, { [`${ this.gids }`]: "未通过风控验证" } );
