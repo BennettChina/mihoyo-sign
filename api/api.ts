@@ -4,9 +4,10 @@ import { config } from "#/mihoyo-sign/init";
 import { transformCookie } from "#/mihoyo-sign/utils/format";
 import { RiskError } from "#/mihoyo-sign/module/exception/risk-error";
 import { GeetestConfig, GeetestValidate } from "#/mihoyo-sign/types/geetest";
-import { NotFoundError } from "#/mihoyo-sign/module/exception/not-found";
+import { NotConfigError } from "#/mihoyo-sign/module/exception/not-config";
 import { getRootVersion, getThisVersion } from "#/mihoyo-sign/utils/version";
 import { AutoFailedException } from "#/mihoyo-sign/module/exception/auto-failed";
+import Bot from "ROOT";
 
 const apis = {
 	FETCH_ROLE_ID: "https://api-takumi-record.mihoyo.com/game_record/app/card/wapi/getGameRecordCard",
@@ -180,13 +181,18 @@ export async function getValidate( gt: string, challenge: string ): Promise<Geet
 	
 	// 获取手动验证的结果
 	const url = config.captcha.apiUrl;
-	if ( !url ) throw new NotFoundError( "未设置 API 服务的地址无法获取到人机验证结果。" );
+	if ( !url ) throw new NotConfigError( "未设置 API 服务的地址无法获取到人机验证结果。" );
 	
 	const response = await axios.get( url, {
 		params: {
 			challenge
 		}
 	} ).catch( reason => Promise.reject( reason.message || reason ) );
+	
+	if ( response.data.code === 1404 ) {
+		// empty data.
+		return response.data.data;
+	}
 	
 	if ( response.data.code !== 0 ) {
 		return Promise.reject( `[获取人机验证结果] ${ response.data.message }` );
@@ -226,6 +232,8 @@ async function getValidateByAuto( gt: string, challenge: string ): Promise<Geete
 		params: p,
 		data: d
 	} );
+	
+	Bot.logger.info( "[获取人机验证结果] [auto]", JSON.stringify( data ) );
 	
 	if ( data[response.codeFieldName] != response.successCode ) {
 		let error = data[response.messageFieldName];

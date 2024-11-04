@@ -1,7 +1,7 @@
-export class NotFoundError extends Error {
+export class NotConfigError extends Error {
 	constructor( message: string, stack?: any ) {
 		super( message );
-		this.name = 'NotFoundError';
+		this.name = 'NotConfigError';
 		this.stack = stack;
 	}
 }

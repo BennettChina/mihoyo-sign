@@ -25,7 +25,7 @@ const template = `
 </table>
 `;
 
-import {computed, defineComponent} from "vue";
+import { computed, defineComponent } from "vue";
 
 export default defineComponent({
     name: 'Community',
@@ -57,14 +57,15 @@ export default defineComponent({
                 const times = item.community.signin_times;
                 const isSigned = item.community.is_signed;
                 const temp = Object.entries(item.community).map(([k, v]) => {
+                    const points = isNumber( v ) ? v : "0";
                     return {
                         uid,
                         name: getName(k),
-                        points: isNumber(v) ? v : "0",
+                        points,
                         reason: isNumber(v) ? "" : v,
                         total,
                         signInTimes: times,
-                        isSigned
+                        isSigned: isSigned || parseInt( points ) > 0 ? "true" : "false",
                     }
                 })
                 data.push(...temp.slice(0, temp.length - 3));

@@ -19,7 +19,7 @@ import { bbs_version } from "#/mihoyo-sign/utils/ds";
 import { transformCookie, transformObj } from "#/mihoyo-sign/utils/format";
 import { RiskError } from "#/mihoyo-sign/module/exception/risk-error";
 import { GeetestValidate } from "#/mihoyo-sign/types/geetest";
-import { NotFoundError } from "#/mihoyo-sign/module/exception/not-found";
+import { NotConfigError } from "#/mihoyo-sign/module/exception/not-config";
 import { AutoFailedException } from "#/mihoyo-sign/module/exception/auto-failed";
 
 
@@ -46,7 +46,7 @@ abstract class SignInCommand implements Command {
 		const url = config.captcha.viewUrl;
 		const enabled = config.captcha.auto.enabled;
 		if ( !enabled && !url ) {
-			throw new NotFoundError( "未设置打码服务地址" );
+			throw new NotConfigError( "未设置打码服务地址" );
 		}
 		let msg_id: number | undefined;
 		if ( !enabled ) {
@@ -74,7 +74,7 @@ abstract class SignInCommand implements Command {
 					geetest_seccode
 				}
 			} catch ( error ) {
-				if ( error instanceof NotFoundError ) {
+				if ( error instanceof NotConfigError ) {
 					throw error;
 				}
 				if ( error instanceof AutoFailedException ) {
@@ -237,7 +237,7 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 			if ( points >= 0 ) {
 				this.info( `[${ uid }] 签到成功，获得米游币: ${ points }` );
 				if ( points > 0 ) {
-					await this.getMissionInfo( account );
+					return await this.getMissionInfo( account );
 				}
 				await this.saveDB( db_key, { [`${ this.gids }`]: points } );
 				return;
@@ -246,11 +246,12 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 		} catch ( error ) {
 			if ( error instanceof RiskError ) {
 				this.warn( error.message );
-				this.info( "进行人机验证，重试一次" );
 				if ( this.validate ) {
+					this.error( "已重试一次，仍未通过验证!" );
 					await this.saveDB( db_key, { [`${ this.gids }`]: error.message } );
 					return;
 				}
+				this.info( "进行人机验证，重试一次" );
 				try {
 					const { gt, challenge } = await createCaptcha( account.cookie, this.headers );
 					const validate = await this.getValidate( account.userId, gt, challenge );
@@ -305,8 +306,9 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 			mission_key: string;
 		} ) => item.mission_key === 'continuous_sign' )?.continuous_cycle_times;
 		
-		if ( is_sign ) {
-			data["5"] = times < 3 ? 30 : times < 5 ? 40 : 50;
+		const is_signed = await Bot.redis.getHashField( `${ this.db_prifix }.${ uid }.bbs`, "is_signed" );
+		if ( is_sign && is_signed !== "true" ) {
+			data[`${ this.gids }`] = times < 3 ? 30 : times < 5 ? 40 : 50;
 			data["is_signed"] = "true";
 		}
 		data["signin_times"] = times || 0;
