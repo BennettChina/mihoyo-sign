@@ -191,7 +191,7 @@ export async function getValidate( gt: string, challenge: string ): Promise<Geet
 	
 	if ( response.data.code === 1404 ) {
 		// empty data.
-		return response.data.data;
+		return { geetest_challenge: "", geetest_validate: "" };
 	}
 	
 	if ( response.data.code !== 0 ) {
