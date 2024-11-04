@@ -84,6 +84,6 @@ export default definePlugin( {
 		}
 	},
 	async unmounted( _params ) {
-		task.cancel();
+		task && task.cancel();
 	}
 } )

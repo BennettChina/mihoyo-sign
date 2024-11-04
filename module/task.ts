@@ -16,7 +16,7 @@ export class Task {
 	constructor() {
 		this.task_name = "miHoYo-signIn-task";
 		this.job = scheduleJob( this.task_name, config.cron, async () => {
-			if ( !config.captcha.auto ) {
+			if ( !config.captcha.auto.enabled ) {
 				Bot.logger.info( "未设置自动打码，自动签到取消执行。" );
 				return;
 			}
