@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { ds, ds2, ds3 } from "#/mihoyo-sign/utils/ds";
 import { config } from "#/mihoyo-sign/init";
 import { transformCookie } from "#/mihoyo-sign/utils/format";
@@ -50,6 +50,8 @@ export async function getDeviceFp( device_id: string, seed_id: string, seed_time
 		ext_fields,
 		app_name,
 		device_fp
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	const data = response.data;
@@ -80,6 +82,8 @@ export async function getUserAccountInfo( uid: number, cookie: string, headers: 
 			"Cookie": cookie,
 			"DS": ds( "bbs" ),
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	if ( response.data.retcode === 1034 ) {
@@ -112,6 +116,8 @@ export async function getGameSignInInfo( uri: string, act_id: string, uid: strin
 			...headers,
 			"Cookie": cookie,
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	if ( response.data.retcode === 1034 ) {
@@ -145,6 +151,8 @@ export async function getGameSignInReward( uri: string, act_id: string, uid: str
 			...headers,
 			"Cookie": cookie,
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	if ( response.data.retcode === 1034 ) {
 		throw new RiskError( "[查询签到奖励] 遇到风控需要人机验证" );
@@ -165,6 +173,8 @@ export async function gameSignIn( uri: string, act_id: string, uid: string, regi
 			"Cookie": cookie,
 			"DS": ds( "sign_in" )
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	if ( response.data.retcode !== 0 ) {
 		return Promise.reject( `[发起游戏签到] ${ response.data.message }` );
@@ -187,7 +197,9 @@ export async function getValidate( gt: string, challenge: string ): Promise<Geet
 		params: {
 			challenge
 		}
-	} ).catch( reason => Promise.reject( reason.message || reason ) );
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
+	} );
 	
 	if ( response.data.code === 1404 ) {
 		// empty data.
@@ -231,6 +243,8 @@ async function getValidateByAuto( gt: string, challenge: string ): Promise<Geete
 		},
 		params: p,
 		data: d
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	Bot.logger.info( "[获取人机验证结果] [auto]", JSON.stringify( data ) );
@@ -268,6 +282,8 @@ export async function querySignInStatus( gids: string | number, cookie: string, 
 			"Cookie": cookie,
 			"DS": ds2( "bbs", undefined, params )
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	if ( response.data.retcode === 1034 ) {
@@ -290,6 +306,8 @@ export async function bbsMissionSignIn( gids: string | number, cookie: string, h
 			"Cookie": cookie,
 			"DS": ds3( "sign_in", data )
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	if ( response.data.retcode === 1034 ) {
@@ -311,6 +329,8 @@ export async function getMissionInfo( cookie: string, headers: Record<string, st
 			Cookie: cookie,
 			"DS": ds( "bbs" )
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	if ( response.data.retcode === 1034 ) {
@@ -337,6 +357,8 @@ export async function createCaptcha( cookie: string, headers: Record<string, str
 			Cookie: cookie,
 			DS: ds2( "bbs", undefined, params )
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	if ( response.data.retcode !== 0 ) {
@@ -357,6 +379,8 @@ export async function verifyCaptcha( data: GeetestValidate, cookie: string, head
 			Cookie: cookie,
 			DS: ds2( "bbs", data )
 		}
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
 	} );
 	
 	if ( response.data.retcode !== 0 ) {
@@ -391,7 +415,9 @@ export async function getMissions( cookie: string, headers: Record<string, strin
 			...headers,
 			Cookie: cookie
 		}
-	} )
+	} ).catch( ( reason: AxiosError ) => {
+		throw new Error( reason.message );
+	} );
 	
 	if ( response.data.retcode === 1034 ) {
 		throw new RiskError( "[获取米游币任务列表] 遇到风控需要人机验证" );
