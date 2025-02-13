@@ -28,11 +28,20 @@ export class Task {
 				const autoList = await Bot.redis.getList( dbKey );
 				for ( let userId of autoList ) {
 					const qq = parseInt( userId );
-					const accounts = await new Account().getAccounts( qq );
-					for ( const account of accounts ) {
-						await new MiHoYoSign().execute( account );
-						// 每个账号签到后加入随机延时
-						await sleep( getRandomNumber( 3000, 5000 ) );
+					let accounts: MiHoYoAccount[];
+					try {
+						accounts = await new Account().getAccounts( qq );
+						for ( const account of accounts ) {
+							await new MiHoYoSign().execute( account );
+							// 每个账号签到后加入随机延时
+							await sleep( getRandomNumber( 3000, 5000 ) );
+						}
+					} catch ( e: any ) {
+						Bot.logger.error( `[miHoYo-sign] [task] [${ qq }] 签到失败`, e );
+						const sendMessage = Bot.message.createMessageSender( MessageType.Private, qq );
+						const msg = `签到失败，${ e.message || "" }请稍后自行重试`;
+						await sendMessage( msg );
+						return;
 					}
 					await this.saveResult( qq, ...accounts );
 					this.sendRender( qq ).catch( reason => Bot.logger.error( reason ) );
