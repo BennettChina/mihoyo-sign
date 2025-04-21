@@ -21,6 +21,7 @@ import { RiskError } from "#/mihoyo-sign/module/exception/risk-error";
 import { GeetestValidate } from "#/mihoyo-sign/types/geetest";
 import { NotConfigError } from "#/mihoyo-sign/module/exception/not-config";
 import { AutoFailedException } from "#/mihoyo-sign/module/exception/auto-failed";
+import { getRandomNumber } from "@/utils/random";
 
 
 export interface Command {
@@ -237,6 +238,14 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 			if ( points >= 0 ) {
 				this.info( `[${ uid }] 签到成功，获得米游币: ${ points }` );
 				if ( points > 0 ) {
+					// 存在签到后获取米币数量未更新，延迟获取。
+					const time = getRandomNumber( 5, 10 ) * 1000;
+					await sleep( time );
+					return await this.getMissionInfo( account );
+				}
+				// 没改签到状态，再去请求一次
+				const is_signed = await Bot.redis.getHashField( `${ this.db_prifix }.${ uid }.bbs`, "is_signed" );
+				if ( is_signed !== "true" ) {
 					return await this.getMissionInfo( account );
 				}
 				await this.saveDB( db_key, { [`${ this.gids }`]: points } );
