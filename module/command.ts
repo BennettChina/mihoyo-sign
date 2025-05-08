@@ -257,7 +257,7 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 				this.warn( error.message );
 				if ( this.validate ) {
 					this.error( "已重试一次，仍未通过验证!" );
-					await this.saveDB( db_key, { [`${ this.gids }`]: error.message } );
+					await this.saveDB( db_key, { [`${ this.gids }`]: "风控重试仍未通过验证" } );
 					return;
 				}
 				this.info( "进行人机验证，重试一次" );
@@ -307,13 +307,16 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 		}
 		const missions = await getMissions( account.cookie, this.getWebHeader( account.deviceData ) );
 		
-		const is_sign = info.states.find( ( item: {
+		let is_sign = info.states.find( ( item: {
 			mission_key: string;
 		} ) => item.mission_key === 'continuous_sign' )?.is_get_award;
 		
 		const times = missions.missions.find( ( item: {
 			mission_key: string;
-		} ) => item.mission_key === 'continuous_sign' )?.continuous_cycle_times;
+		} ) => item.mission_key === 'continuous_sign' )?.continuous_cycle_times || 0;
+		
+		// is_sign可能因为数据未更新，false时再根据连签次数进行判断
+		is_sign = is_sign ? true : times > 0;
 		
 		const is_signed = await Bot.redis.getHashField( `${ this.db_prifix }.${ uid }.bbs`, "is_signed" );
 		if ( is_sign && is_signed !== "true" ) {
