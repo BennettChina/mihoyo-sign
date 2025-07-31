@@ -22,6 +22,7 @@ const initConfig = {
 			headers: {
 				"Content-Type": "application/json",
 			},
+			timeout: 10000,
 			response: {
 				codeFieldName: "code",
 				messageFieldName: "message",

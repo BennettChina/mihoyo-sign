@@ -40,6 +40,9 @@ const apis = {
 	FETCH_MISSION_VERIFY_VERIFICATION: "https://bbs-api.miyoushe.com/misc/api/verifyVerification",
 };
 
+// 设置全局超时时间
+const DEFAULT_TIMEOUT = 5000;
+axios.defaults.timeout = DEFAULT_TIMEOUT;
 
 export async function getDeviceFp( device_id: string, seed_id: string, seed_time: string, ext_fields: string, device_fp: string, platform: string = "4", app_name: string = "bbs_cn" ): Promise<string> {
 	const response = await axios.post( apis.FETCH_GET_DEVICE_FP, {
@@ -218,7 +221,7 @@ export async function getValidate( gt: string, challenge: string ): Promise<Geet
 }
 
 async function getValidateByAuto( gt: string, challenge: string ): Promise<GeetestValidate> {
-	const { method, api, headers, params, response } = config.captcha.auto;
+	const { method, api, headers, params, response, timeout } = config.captcha.auto;
 	let p: any | undefined, d: any | undefined;
 	if ( method === "get" ) {
 		p = {
@@ -241,10 +244,11 @@ async function getValidateByAuto( gt: string, challenge: string ): Promise<Geete
 			"User-Agent": `Adachi-Bot/${ getRootVersion() } mihoyo-sign/${ getThisVersion() }`,
 			...headers,
 		},
+		timeout,
 		params: p,
 		data: d
 	} ).catch( ( reason: AxiosError ) => {
-		throw new Error( reason.message );
+		throw new AutoFailedException( reason.message );
 	} );
 	
 	Bot.logger.info( "[获取人机验证结果] [auto]", JSON.stringify( data ) );
