@@ -186,9 +186,9 @@ export async function gameSignIn( uri: string, act_id: string, uid: string, regi
 	return response.data.data;
 }
 
-export async function getValidate( gt: string, challenge: string ): Promise<GeetestValidate> {
+export async function getValidate( gt: string, challenge: string, manual?: boolean ): Promise<GeetestValidate> {
 	// 自动验证
-	if ( config.captcha.auto.enabled ) {
+	if ( !manual && config.captcha.auto.enabled ) {
 		return getValidateByAuto( gt, challenge );
 	}
 	

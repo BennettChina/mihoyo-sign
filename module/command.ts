@@ -43,14 +43,17 @@ abstract class SignInCommand implements Command {
 		await Bot.redis.setTimeout( key, 600 );
 	}
 	
-	protected async getValidate( userId: number, gt: string, challenge: string ): Promise<GeetestValidate> {
+	protected async getValidate( userId: number, gt: string, challenge: string, retryManual?: boolean ): Promise<GeetestValidate> {
 		const url = config.captcha.viewUrl;
 		const enabled = config.captcha.auto.enabled;
 		if ( !enabled && !url ) {
 			throw new NotConfigError( "未设置打码服务地址" );
 		}
+		if ( retryManual && !url ) {
+			throw new NotConfigError( "自动打码服务异常，未配置手动过码服务无法重试" );
+		}
 		let msg_id: number | undefined;
-		if ( !enabled ) {
+		if ( retryManual || !enabled ) {
 			const obj = new URL( url );
 			obj.searchParams.append( "gt", gt );
 			obj.searchParams.append( "challenge", challenge );
@@ -61,7 +64,11 @@ abstract class SignInCommand implements Command {
 		for ( let i = 0; i < 24; i++ ) {
 			await sleep( 5000 );
 			try {
-				const { geetest_challenge, geetest_validate, geetest_seccode } = await getValidate( gt, challenge );
+				const {
+					geetest_challenge,
+					geetest_validate,
+					geetest_seccode
+				} = await getValidate( gt, challenge, retryManual );
 				if ( !geetest_validate ) {
 					continue;
 				}
@@ -80,7 +87,10 @@ abstract class SignInCommand implements Command {
 				}
 				if ( error instanceof AutoFailedException ) {
 					Bot.logger.error( error.message );
-					throw error;
+					if ( retryManual ) {
+						throw error;
+					}
+					return await this.getValidate( userId, gt, challenge, true );
 				}
 				if ( !printed ) {
 					Bot.logger.info( error );
