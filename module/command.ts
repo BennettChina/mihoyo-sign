@@ -43,7 +43,7 @@ abstract class SignInCommand implements Command {
 		await Bot.redis.setTimeout( key, 600 );
 	}
 	
-	protected async getValidate( userId: number, gt: string, challenge: string, retryManual?: boolean ): Promise<GeetestValidate> {
+	protected async getValidate( userId: number, cookie: string, headers: Record<string, string | number>, gt: string, challenge: string, retryManual?: boolean ): Promise<GeetestValidate> {
 		const url = config.captcha.viewUrl;
 		const enabled = config.captcha.auto.enabled;
 		if ( !enabled && !url ) {
@@ -54,6 +54,12 @@ abstract class SignInCommand implements Command {
 		}
 		let msg_id: number | undefined;
 		if ( retryManual || !enabled ) {
+			if ( retryManual ) {
+				// 手动重试时需要重新生成验证码
+				const { gt: _gt, challenge: _challenge } = await createCaptcha( cookie, headers );
+				gt = _gt;
+				challenge = _challenge;
+			}
 			const obj = new URL( url );
 			obj.searchParams.append( "gt", gt );
 			obj.searchParams.append( "challenge", challenge );
@@ -90,7 +96,7 @@ abstract class SignInCommand implements Command {
 					if ( retryManual ) {
 						throw error;
 					}
-					return await this.getValidate( userId, gt, challenge, true );
+					return await this.getValidate( userId, cookie, headers, gt, challenge, true );
 				}
 				if ( !printed ) {
 					Bot.logger.info( error );
@@ -207,7 +213,7 @@ export abstract class GameSignInCommand extends SignInCommand implements Command
 				geetest_challenge,
 				geetest_validate,
 				geetest_seccode
-			} = await this.getValidate( userId, sign.gt, sign.challenge );
+			} = await this.getValidate( userId, cookie, this.headers, sign.gt, sign.challenge );
 			return this.gameSignIn( userId, uid, region, cookie, geetest_challenge, geetest_validate, geetest_seccode, ++retry );
 		} catch ( error ) {
 			// 自动打码失败也加入重试
@@ -273,7 +279,7 @@ export abstract class MissionSignInCommand extends SignInCommand implements Comm
 				this.info( "进行人机验证，重试一次" );
 				try {
 					const { gt, challenge } = await createCaptcha( account.cookie, this.headers );
-					const validate = await this.getValidate( account.userId, gt, challenge );
+					const validate = await this.getValidate( account.userId, account.cookie, this.headers, gt, challenge );
 					await verifyCaptcha( validate, account.cookie, this.headers );
 					this.validate = true;
 					return await this.signIn( account );
